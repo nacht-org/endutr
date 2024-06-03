@@ -1,16 +1,15 @@
-use std::{slice, vec};
 use std::ops::Range;
 
-use {Tree, NodeId, Node, NodeRef};
+use crate::{Node, NodeId, NodeRef, Tree};
 
 /// Iterator that moves out of a tree in insert order.
 #[derive(Debug)]
-pub struct IntoIter<T>(vec::IntoIter<Node<T>>);
-impl<T> ExactSizeIterator for IntoIter<T> { }
+pub struct IntoIter<T>(slab::IntoIter<Node<T>>);
+impl<T> ExactSizeIterator for IntoIter<T> {}
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|node| node.value)
+        self.0.next().map(|(_, node)| node.value)
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
@@ -18,23 +17,23 @@ impl<T> Iterator for IntoIter<T> {
 }
 impl<T> DoubleEndedIterator for IntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.0.next_back().map(|node| node.value)
+        self.0.next_back().map(|(_, node)| node.value)
     }
 }
 
 /// Iterator over values in insert order.
 #[derive(Debug)]
-pub struct Values<'a, T: 'a>(slice::Iter<'a, Node<T>>);
+pub struct Values<'a, T: 'a>(slab::Iter<'a, Node<T>>);
 impl<'a, T: 'a> Clone for Values<'a, T> {
     fn clone(&self) -> Self {
         Values(self.0.clone())
     }
 }
-impl<'a, T: 'a> ExactSizeIterator for Values<'a, T> { }
+impl<'a, T: 'a> ExactSizeIterator for Values<'a, T> {}
 impl<'a, T: 'a> Iterator for Values<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|node| &node.value)
+        self.0.next().map(|(_, node)| &node.value)
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
@@ -42,18 +41,18 @@ impl<'a, T: 'a> Iterator for Values<'a, T> {
 }
 impl<'a, T: 'a> DoubleEndedIterator for Values<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.0.next_back().map(|node| &node.value)
+        self.0.next_back().map(|(_, node)| &node.value)
     }
 }
 
 /// Mutable iterator over values in insert order.
 #[derive(Debug)]
-pub struct ValuesMut<'a, T: 'a>(slice::IterMut<'a, Node<T>>);
-impl<'a, T: 'a> ExactSizeIterator for ValuesMut<'a, T> { }
+pub struct ValuesMut<'a, T: 'a>(slab::IterMut<'a, Node<T>>);
+impl<'a, T: 'a> ExactSizeIterator for ValuesMut<'a, T> {}
 impl<'a, T: 'a> Iterator for ValuesMut<'a, T> {
     type Item = &'a mut T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|node| &mut node.value)
+        self.0.next().map(|(_, node)| &mut node.value)
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
@@ -61,7 +60,7 @@ impl<'a, T: 'a> Iterator for ValuesMut<'a, T> {
 }
 impl<'a, T: 'a> DoubleEndedIterator for ValuesMut<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.0.next_back().map(|node| &mut node.value)
+        self.0.next_back().map(|(_, node)| &mut node.value)
     }
 }
 
@@ -73,14 +72,19 @@ pub struct Nodes<'a, T: 'a> {
 }
 impl<'a, T: 'a> Clone for Nodes<'a, T> {
     fn clone(&self) -> Self {
-        Self { tree: self.tree, iter: self.iter.clone() }
+        Self {
+            tree: self.tree,
+            iter: self.iter.clone(),
+        }
     }
 }
-impl<'a, T: 'a> ExactSizeIterator for Nodes<'a, T> { }
+impl<'a, T: 'a> ExactSizeIterator for Nodes<'a, T> {}
 impl<'a, T: 'a> Iterator for Nodes<'a, T> {
     type Item = NodeRef<'a, T>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|i| unsafe { self.tree.get_unchecked(NodeId::from_index(i)) })
+        self.iter
+            .next()
+            .map(|i| unsafe { self.tree.get_unchecked(NodeId::from_index(i)) })
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -88,7 +92,9 @@ impl<'a, T: 'a> Iterator for Nodes<'a, T> {
 }
 impl<'a, T: 'a> DoubleEndedIterator for Nodes<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back().map(|i| unsafe { self.tree.get_unchecked(NodeId::from_index(i)) })
+        self.iter
+            .next_back()
+            .map(|i| unsafe { self.tree.get_unchecked(NodeId::from_index(i)) })
     }
 }
 
@@ -96,24 +102,27 @@ impl<T> IntoIterator for Tree<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter(self.vec.into_iter())
+        IntoIter(self.slab.into_iter())
     }
 }
 
 impl<T> Tree<T> {
     /// Returns an iterator over values in insert order.
     pub fn values(&self) -> Values<T> {
-        Values(self.vec.iter())
+        Values(self.slab.iter())
     }
 
     /// Returns a mutable iterator over values in insert order.
     pub fn values_mut(&mut self) -> ValuesMut<T> {
-        ValuesMut(self.vec.iter_mut())
+        ValuesMut(self.slab.iter_mut())
     }
 
     /// Returns an iterator over nodes in insert order.
     pub fn nodes(&self) -> Nodes<T> {
-        Nodes { tree: self, iter: 0..self.vec.len() }
+        Nodes {
+            tree: self,
+            iter: 0..self.slab.len(),
+        }
     }
 }
 
@@ -165,7 +174,10 @@ pub struct Children<'a, T: 'a> {
 }
 impl<'a, T: 'a> Clone for Children<'a, T> {
     fn clone(&self) -> Self {
-        Self { front: self.front.clone(), back: self.back.clone() }
+        Self {
+            front: self.front.clone(),
+            back: self.back.clone(),
+        }
     }
 }
 impl<'a, T: 'a> Iterator for Children<'a, T> {
@@ -204,17 +216,17 @@ pub enum Edge<'a, T: 'a> {
     /// Close.
     Close(NodeRef<'a, T>),
 }
-impl<'a, T: 'a> Copy for Edge<'a, T> { }
+impl<'a, T: 'a> Copy for Edge<'a, T> {}
 impl<'a, T: 'a> Clone for Edge<'a, T> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
-impl<'a, T: 'a> Eq for Edge<'a, T> { }
+impl<'a, T: 'a> Eq for Edge<'a, T> {}
 impl<'a, T: 'a> PartialEq for Edge<'a, T> {
     fn eq(&self, other: &Self) -> bool {
         match (*self, *other) {
-            (Edge::Open(a), Edge::Open(b)) | (Edge::Close(a), Edge::Close(b)) => {
-                a == b
-            },
+            (Edge::Open(a), Edge::Open(b)) | (Edge::Close(a), Edge::Close(b)) => a == b,
             _ => false,
         }
     }
@@ -228,7 +240,10 @@ pub struct Traverse<'a, T: 'a> {
 }
 impl<'a, T: 'a> Clone for Traverse<'a, T> {
     fn clone(&self) -> Self {
-        Self { root: self.root, edge: self.edge }
+        Self {
+            root: self.root,
+            edge: self.edge,
+        }
     }
 }
 impl<'a, T: 'a> Iterator for Traverse<'a, T> {
@@ -237,23 +252,23 @@ impl<'a, T: 'a> Iterator for Traverse<'a, T> {
         match self.edge {
             None => {
                 self.edge = Some(Edge::Open(self.root));
-            },
+            }
             Some(Edge::Open(node)) => {
                 if let Some(first_child) = node.first_child() {
                     self.edge = Some(Edge::Open(first_child));
                 } else {
                     self.edge = Some(Edge::Close(node));
                 }
-            },
+            }
             Some(Edge::Close(node)) => {
                 if node == self.root {
-                     self.edge = None;
+                    self.edge = None;
                 } else if let Some(next_sibling) = node.next_sibling() {
                     self.edge = Some(Edge::Open(next_sibling));
                 } else {
                     self.edge = node.parent().map(Edge::Close);
                 }
-            },
+            }
         }
         self.edge
     }

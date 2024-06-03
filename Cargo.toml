@@ -10,3 +10,9 @@ authors = [
 license = "ISC"
 repository = "https://github.com/causal-agent/endutr"
 readme = "README.md"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+itertools = "0.13.0"
+slab = "~0.4"
