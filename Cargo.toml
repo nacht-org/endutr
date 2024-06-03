@@ -1,9 +1,12 @@
 [package]
-name = "ego-tree"
+name = "endutr"
 version = "0.6.2"
-description = "Vec-backed ID-tree"
-keywords = ["tree", "vec", "id", "index"]
-authors = ["June McEnroe <june@causal.agency>"]
+description = "Slab-backed ID-tree"
+keywords = ["tree", "slab", "id", "index"]
+authors = [
+    "June McEnroe <june@causal.agency>",
+    "Mohamed Haisham <mhaisham79@gmail.com>",
+]
 license = "ISC"
-repository = "https://github.com/causal-agent/ego-tree"
+repository = "https://github.com/causal-agent/endutr"
 readme = "README.md"

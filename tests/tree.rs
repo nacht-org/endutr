@@ -1,6 +1,6 @@
-extern crate ego_tree;
+extern crate endutr;
 
-use ego_tree::Tree;
+use endutr::Tree;
 
 #[test]
 fn new() {

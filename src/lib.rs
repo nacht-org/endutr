@@ -14,7 +14,7 @@
 //! # Examples
 //!
 //! ```
-//! let mut tree = ego_tree::Tree::new('a');
+//! let mut tree = endutr::Tree::new('a');
 //! let mut root = tree.root_mut();
 //! root.append('b');
 //! let mut c = root.append('c');
@@ -23,7 +23,7 @@
 //! ```
 //!
 //! ```
-//! #[macro_use] extern crate ego_tree;
+//! #[macro_use] extern crate endutr;
 //! # fn main() {
 //! let tree = tree!('a' => { 'b', 'c' => { 'd', 'e' } });
 //! # }
@@ -575,14 +575,14 @@ pub mod iter;
 /// # Examples
 ///
 /// ```
-/// #[macro_use] extern crate ego_tree;
+/// #[macro_use] extern crate endutr;
 /// # fn main() {
 /// let tree = tree!("root");
 /// # }
 /// ```
 ///
 /// ```
-/// #[macro_use] extern crate ego_tree;
+/// #[macro_use] extern crate endutr;
 /// # fn main() {
 /// let tree = tree! {
 ///     "root" => {

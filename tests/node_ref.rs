@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate ego_tree;
+extern crate endutr;
 
 #[test]
 fn value() {

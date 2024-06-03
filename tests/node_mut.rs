@@ -1,7 +1,7 @@
 #[macro_use]
-extern crate ego_tree;
+extern crate endutr;
 
-use ego_tree::NodeRef;
+use endutr::NodeRef;
 
 #[test]
 fn value() {
