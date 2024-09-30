@@ -8,7 +8,7 @@ authors = [
     "Mohamed Haisham <mhaisham79@gmail.com>",
 ]
 license = "ISC"
-repository = "https://github.com/causal-agent/endutr"
+repository = "https://github.com/nacht-org/endutr"
 readme = "README.md"
 edition = "2021"
 resolver = "2"
