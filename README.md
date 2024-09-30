@@ -1,4 +1,4 @@
-# Ego Tree
+# Endutr
 
 [![Crate version][crate-badge]][crate]
 [![Build status][travis-badge]][travis]
